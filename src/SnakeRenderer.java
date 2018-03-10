@@ -19,8 +19,8 @@ public class SnakeRenderer extends JPanel {
 		}
 	});
 
-	public final static int X_SIZE = 100;
-	public final static int Y_SIZE = 100;
+	public final static int X_SIZE = 30;
+	public final static int Y_SIZE = 30;
 
 	public ArrayList<GameObject> renderList = new ArrayList<GameObject>();
 
@@ -31,7 +31,7 @@ public class SnakeRenderer extends JPanel {
 		Snake snake = new Snake();
 		renderList.add(snake);
 		renderList.add(new Apple());
-		renderList.add(new SquareWallEmpty(new Coord(0, 0), new Coord(X_SIZE-1, Y_SIZE-1)));
+		renderList.add(new SquareWallEmpty(new Coord(0, 0), new Coord(X_SIZE - 1, Y_SIZE - 1)));
 
 		this.setFocusable(true);
 		this.requestFocus();
@@ -59,60 +59,63 @@ public class SnakeRenderer extends JPanel {
 		}
 		ArrayList<GameObject> addList = new ArrayList<GameObject>();
 		ArrayList<GameObject> removeList = new ArrayList<GameObject>();
+
 		for (GameObject gameObject : renderList) {
+
 			gameObject.update();
-			for (Coord coord : gameObject.coords) {
-				switch(gameObject.type) {
-				case SNAKE:
 
-					for (GameObject colidingObject : (ArrayList<GameObject>) renderList.clone()) {
-						switch (colidingObject.type) {
-						case APPLE:
-							if(colidingObject.visible) {
-							if (colidingObject.coords.get(0).x == coord.x
-									&& colidingObject.coords.get(0).y == coord.y) {
+			switch (gameObject.type) {
+			case SNAKE:
+				Coord head = gameObject.coords.get(0);
+				for (GameObject colidingObject : (ArrayList<GameObject>)renderList.clone()) {
+					for (Coord colidingCoord : colidingObject.coords) {
+						if(head.x == colidingCoord.x && head.y == colidingCoord.y) {
+							switch(colidingObject.type) {
+							case APPLE:
+								((Snake)gameObject).length += 3;
 								colidingObject.visible = false;
-								removeList.remove(colidingObject);
-								((Snake) gameObject).length += 2;
+								removeList.add(colidingObject);
 								addList.add(new Apple());
-							}
-							}
-							break;
-						case SNAKE:
-							if (gameObject.coords.get(0) != coord) {
-								if (gameObject.coords.get(0).x == coord.x
-										&& gameObject.coords.get(0).y == coord.y) {
-									JOptionPane.showMessageDialog(this, "Loser");
-									timer.stop();
+								break;
+							default:
+								if(colidingCoord != head) {
+								timer.stop();
+								JOptionPane.showMessageDialog(this, "Loser");
 								}
+								break;
 							}
-							break;
-
-						case WALL:
-							for (Coord colidingCoord : colidingObject.coords) {
-								if (colidingCoord.x == coord.x
-										&& colidingCoord.y == coord.y) {
-									JOptionPane.showMessageDialog(this, "Loser");
-									timer.stop();
-								}
-							}
-							break;
-						default:
-							break;
 						}
 					}
-					break;
-					default:break;
-					
 				}
+				break;
+			case APPLE:
+				Coord apple = gameObject.coords.get(0);
+				for (GameObject colidingObject : (ArrayList<GameObject>)renderList.clone()) {
+					for (Coord colidingCoord : colidingObject.coords) {
+						if(apple.x == colidingCoord.x && apple.y == colidingCoord.y) {
+							switch(colidingObject.type) {
+							case SNAKE:
+							case APPLE:
+								break;
+							default:
+								gameObject.visible = false;
+								removeList.add(gameObject);
+								addList.add(new Apple());
+								break;
+							}
+						}
+					}
+				}
+				break;
+			default:
+				break;
+			}
+
+			for (Coord coord : gameObject.coords) {
 				if (gameObject.visible) {
 					switch (gameObject.type) {
 					case SNAKE:
-						if (gameObject.coords.indexOf(coord) == 0) {
-							this.mainArray[coord.x][coord.y].setBackground(Color.GREEN);
-						} else {
-							this.mainArray[coord.x][coord.y].setBackground(Color.BLUE);
-						}
+						this.mainArray[coord.x][coord.y].setBackground(Color.GREEN);
 						break;
 					case APPLE:
 						this.mainArray[coord.x][coord.y].setBackground(Color.RED);
@@ -128,6 +131,7 @@ public class SnakeRenderer extends JPanel {
 				}
 			}
 		}
+
 		renderList.addAll(addList);
 		renderList.removeAll(removeList);
 
